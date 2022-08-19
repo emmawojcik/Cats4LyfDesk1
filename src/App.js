@@ -1,11 +1,18 @@
-
+import './App.css';
 import styled from "styled-components";
 import { faker, FakerError } from "@faker-js/faker";
 import React, { useState, useEffect } from "react";
+import cartImage from './images/shopping-cart.png';
+import Modal from 'react-modal';
 
 function CatModal() {
   const [errorMsg, setErrorMsg] = useState("");
   const [cats, setCats] = useState([]);
+  const [showBasket, setShowBasket] = useState(false);
+
+  const toggleBasketModal = () => {
+    setShowBasket(!showBasket);
+  } 
 
   useEffect(() => {
     // asynchronous function so we can wait for data to be fetched
@@ -54,18 +61,40 @@ function CatModal() {
   // const CatName = faker.animal.cat();
 
   return (
-    <div>
-      <Title>Cats4lyf</Title>
-      <hr />
-      <Content>
-        {cats.map((catsInfo, index) => {
-          return (
-            <div>
-              <ModalCard key={index} catsInfoObject={catsInfo} />
+    <div className = "outerDiv">
+      <div className="navBar">
+        <Title>Cats4lyf</Title>
+        <button onClick={toggleBasketModal}><img src={cartImage} id="cart-image" alt="basket icon"></img></button>
+      </div>
+
+      <div className = "basket-cat-content-split">
+        <Content>
+          {cats.map((catsInfo, index) => {
+            return (
+              <div>
+                <ModalCard key={index} catsInfoObject={catsInfo} />
+              </div>
+            );
+          })}
+        </Content>
+        
+        <Modal
+          isOpen={showBasket}
+          onRequestClose={toggleBasketModal}
+          className = "basketModal"
+          overlayClassName="overlayModal"
+        > 
+          <div id="cartContent">
+            <h3>Your cart:</h3>
+            <div id="basketTotal">
+              <h3>Total</h3>
+              <h3>£0.00</h3>
             </div>
-          );
-        })}
-      </Content>
+          </div>
+          
+        </Modal>
+
+      </div>
     </div>
   );
 }
@@ -124,6 +153,7 @@ const Content = styled.div`
   align-items: center;
   flex-wrap: wrap;
   padding: 10px;
+  z-index: 0;
 `;
 
 const Title = styled.h1`
