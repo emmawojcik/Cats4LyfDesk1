@@ -6,9 +6,12 @@ import cartImage from './images/shopping-cart.png';
 import Modal from 'react-modal';
 
 function CatModal() {
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState('');
   const [cats, setCats] = useState([]);
   const [showBasket, setShowBasket] = useState(false);
+  const [cart, setCart] = useState([]);
+	const [total, setTotal] = useState(0);
+
 
   const toggleBasketModal = () => {
     setShowBasket(!showBasket);
@@ -35,7 +38,7 @@ function CatModal() {
 
         const catData = data.map((cat, index) => {
           return {
-            name: faker.name.findName(),
+            name: faker.name.fullName(),
             catImage: cat.url,
             catBreed: faker.animal.cat(),
             catPrice: faker.finance.amount(),
@@ -58,13 +61,28 @@ function CatModal() {
     return <h1>{errorMsg}</h1>;
   }
 
-  // const CatName = faker.animal.cat();
+  //adds the cats to the basket when add to cart is clicked
+  const addToCart = (catsInfo) => {
+    console.log('in add to cart');
+    setCart([...cart, catsInfo])
+  }
 
-  return (
+  //calculates the total cost of the cats in the basket 
+  useEffect(()=> {
+    let num = 0
+    for (let i = 0; i < cart.length; i++){
+        num += Number(cart[i].catPrice)
+    }
+    setTotal(num.toFixed(2))
+}, [cart,setTotal])
+
+
+  return (     
     <div className = "outerDiv">
       <div className="navBar">
         <Title>Cats4lyf</Title>
-        <button onClick={toggleBasketModal}><img src={cartImage} id="cart-image" alt="basket icon"></img></button>
+        <button onClick={toggleBasketModal}><img src={cartImage} id="cart-image" alt="basket icon"></img>({cart.length})</button> 
+        {/* cart.length adds up the number of products in the basket */}
       </div>
 
       <div className = "basket-cat-content-split">
@@ -72,36 +90,51 @@ function CatModal() {
           {cats.map((catsInfo, index) => {
             return (
               <div>
-                <ModalCard key={index} catsInfoObject={catsInfo} />
+                <ModalCard key={index} catsInfoObject={catsInfo} addToCart={addToCart} />
               </div>
             );
           })}
         </Content>
+      
         
         <Modal
           isOpen={showBasket}
           onRequestClose={toggleBasketModal}
           className = "basketModal"
           overlayClassName="overlayModal"
+          addToCart={addToCart}         
         > 
-          <div id="cartContent">
-            <h3>Your cart:</h3>
-            <div id="basketTotal">
-              <h3>Total</h3>
-              <h3>£0.00</h3>
-            </div>
-          </div>
-          
-        </Modal>
 
+          <div id="cartContent">
+            
+            <h3>Your cart:</h3>
+            <div>{cart.length === 0 && <div>Cart is Empty</div>}</div>
+            {/* displays cart is empty if you click on the basket with no cats in it */}
+
+            <CartDiv>
+              {cart.map(catsInfoObject => (
+                <p>
+                  <div>{catsInfoObject.name}</div>
+                  <div>£{catsInfoObject.catPrice}</div>
+                  <CatImg src={catsInfoObject.catImage} alt="poster of movie" />
+                </p>
+              ))}
+              <h2>Your total is: £{total}</h2>
+            </CartDiv>     
+            </div>    
+  
+        </Modal>
       </div>
     </div>
   );
 }
 
-const ModalCard = ({ catsInfoObject }) => {
+const ModalCard = ({ catsInfoObject, addToCart }) => {
   const [modal, setModal] = useState(false);
+  const [disable, setDisable] = useState(false);
+
   return (
+  
     <div>
       <ImageContainer>
         <Images src={catsInfoObject.catImage} alt="poster of movie" />
@@ -115,6 +148,7 @@ const ModalCard = ({ catsInfoObject }) => {
       </ImageContainer>
 
       <div>
+      
         {modal && (
           <ModalOverlay>
             <ModalOverlay
@@ -122,6 +156,7 @@ const ModalCard = ({ catsInfoObject }) => {
               className="overlay"
             ></ModalOverlay>
             <ModalContent>
+            
               <h2>{catsInfoObject.name}</h2>
               <br />
               <ModalImage src={catsInfoObject.catImage} alt="poster of movie" />
@@ -130,7 +165,11 @@ const ModalCard = ({ catsInfoObject }) => {
                 <li>Breed: {catsInfoObject.catBreed}</li>
                 <li>Address: {catsInfoObject.catAddress}</li>
               </Ulist>
-              <CartBtn>ADD TO CART</CartBtn>
+              
+                
+                  <CartBtn disabled={disable} onClick={() => {addToCart(catsInfoObject); setDisable(true) }}>ADD TO CART</CartBtn>
+                  {/* when add to cart is clicked, the cat is added to the basket, then add to cart is disabled so you can't have multiple of the same cat */}
+                
               <CloseBtn
                 className="close-modal"
                 onClick={() => setModal(!modal)}
@@ -140,12 +179,24 @@ const ModalCard = ({ catsInfoObject }) => {
             </ModalContent>
           </ModalOverlay>
         )}
-      </div>
+        
+      </div>      
     </div>
+  
   );
 };
 
+
 export default CatModal;
+
+const CartDiv = styled.div`
+  text-align: center;
+`
+
+const CatImg = styled.img`
+    width: 150px;
+    height: 100px;
+`
 
 const Content = styled.div`
   display: flex;
@@ -162,7 +213,7 @@ const Title = styled.h1`
 `;
 
 const CloseBtn = styled.button`
- position: absolute;
+  position: absolute;
   background: red;
   border: none;
   color: white;
